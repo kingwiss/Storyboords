@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Player Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .log { background: white; padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid #2196F3; }
+        .error { border-left-color: #f44336; background: #ffebee; }
+        .warn { border-left-color: #ff9800; background: #fff3e0; }
+        .success { border-left-color: #4caf50; background: #e8f5e9; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #1976D2; }
+        .status { padding: 15px; background: white; border-radius: 5px; margin: 10px 0; }
+        .track-info { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        audio { width: 100%; margin: 10px 0; }
+        pre { background: #f0f0f0; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Music Player Debug Console</h1>
+        
+        <div class="status">
+            <h3>Status</h3>
+            <div id="status">Initializing...</div>
+        </div>
+        
+        <button onclick="testDirectAPI()">🔍 Test Freesound API Directly</button>
+        <button onclick="testMusicPlayer()">🎵 Test Music Player</button>
+        <button onclick="clearLogs()">🗑️ Clear Logs</button>
+        
+        <div class="track-info" id="trackInfo" style="display: none;">
+            <h3>Current Track</h3>
+            <div id="currentTrack"></div>
+        </div>
+        
+        <div id="logs"></div>
+    </div>
+
+    <script>
+        const logsDiv = document.getElementById('logs');
+        const statusDiv = document.getElementById('status');
+        const trackInfoDiv = document.getElementById('trackInfo');
+        const currentTrackDiv = document.getElementById('currentTrack');
+        
+        // Override console methods to display on page
+        const originalConsole = {
+            log: console.log,
+            error: console.error,
+            warn: console.warn,
+            info: console.info
+        };
+        
+        function addLog(type, ...args) {
+            const logDiv = document.createElement('div');
+            const className = type === 'error' ? 'error' : type === 'warn' ? 'warn' : type === 'success' ? 'success' : 'log';
+            logDiv.className = `log ${className}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const content = args.map(arg => {
+                if (typeof arg === 'object') {
+                    return JSON.stringify(arg, null, 2);
+                }
+                return String(arg);
+            }).join(' ');
+            
+            logDiv.innerHTML = `<strong>[${timestamp}] [${type.toUpperCase()}]</strong><br>${content.replace(/\n/g, '<br>')}`;
+            logsDiv.appendChild(logDiv);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            
+            // Also call original console method
+            originalConsole[type](...args);
+        }
+        
+        console.log = (...args) => addLog('info', ...args);
+        console.error = (...args) => addLog('error', ...args);
+        console.warn = (...args) => addLog('warn', ...args);
+        console.info = (...args) => addLog('info', ...args);
+        
+        function clearLogs() {
+            logsDiv.innerHTML = '';
+        }
+        
+        function updateStatus(message, isError = false) {
+            statusDiv.innerHTML = `<span style="color: ${isError ? 'red' : 'green'}">${message}</span>`;
+        }
+        
+        async function testDirectAPI() {
+            console.log('🔍 Testing Freesound API directly...');
+            updateStatus('Testing API...');
+            
+            try {
+                const apiKey = '4cmgOaCLIaCPZljPUkzZnJB6qKWjoxEC1Rtxv5eJ';
+                const url = `https://freesound.org/apiv2/search/text/?query=ambient%20music&filter=duration:[30%20TO%20300]%20license:%22Creative%20Commons%200%22&sort=rating_desc&page_size=3&fields=id,name,username,previews,duration,license&token=${apiKey}`;
+                
+                console.log('API URL:', url);
+                
+                const response = await fetch(url);
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('✅ API Response received:', {
+                    count: data.count,
+                    resultsLength: data.results?.length || 0
+                });
+                
+                if (data.results && data.results.length > 0) {
+                    const firstSound = data.results[0];
+                    console.log('First sound details:', {
+                        id: firstSound.id,
+                        name: firstSound.name,
+                        username: firstSound.username,
+                        hasPreviewsField: !!firstSound.previews,
+                        previewKeys: firstSound.previews ? Object.keys(firstSound.previews) : 'No previews'
+                    });
+                    
+                    if (firstSound.previews && firstSound.previews['preview-hq-mp3']) {
+                        const previewUrl = firstSound.previews['preview-hq-mp3'];
+                        console.log('✅ Found preview URL:', previewUrl);
+                        
+                        // Test if we can create an audio element with this URL
+                        const testAudio = new Audio();
+                        testAudio.crossOrigin = 'anonymous';
+                        
+                        testAudio.addEventListener('loadstart', () => {
+                            console.log('✅ Audio loading started successfully');
+                        });
+                        
+                        testAudio.addEventListener('canplay', () => {
+                            console.log('✅ Audio can play - URL is accessible!');
+                            updateStatus('✅ API and audio URL working!');
+                        });
+                        
+                        testAudio.addEventListener('error', (e) => {
+                            console.error('❌ Audio error:', e);
+                            console.error('Audio error details:', testAudio.error);
+                            updateStatus('❌ Audio URL not accessible', true);
+                        });
+                        
+                        testAudio.src = previewUrl;
+                        
+                        // Show track info
+                        trackInfoDiv.style.display = 'block';
+                        currentTrackDiv.innerHTML = `
+                            <strong>Name:</strong> ${firstSound.name}<br>
+                            <strong>Artist:</strong> ${firstSound.username}<br>
+                            <strong>Duration:</strong> ${firstSound.duration}s<br>
+                            <strong>Preview URL:</strong> <a href="${previewUrl}" target="_blank">${previewUrl}</a><br>
+                            <audio controls><source src="${previewUrl}" type="audio/mpeg"></audio>
+                        `;
+                    } else {
+                        console.error('❌ No preview-hq-mp3 found in first sound');
+                        updateStatus('❌ No preview URL found', true);
+                    }
+                } else {
+                    console.error('❌ No results in API response');
+                    updateStatus('❌ No results from API', true);
+                }
+                
+            } catch (error) {
+                console.error('❌ API test failed:', error);
+                updateStatus('❌ API test failed: ' + error.message, true);
+            }
+        }
+        
+        let musicPlayer = null;
+        
+        async function testMusicPlayer() {
+            console.log('🎵 Testing Music Player class...');
+            updateStatus('Testing Music Player...');
+            
+            try {
+                // Import the music player class
+                const script = document.createElement('script');
+                script.src = 'real-music-player.js';
+                script.onload = async () => {
+                    console.log('✅ Music player script loaded');
+                    
+                    try {
+                        musicPlayer = new RealMusicPlayer();
+                        console.log('✅ Music player instance created');
+                        updateStatus('✅ Music player created, waiting for initialization...');
+                        
+                        // Wait for initialization
+                        setTimeout(() => {
+                            if (musicPlayer.isInitialized) {
+                                console.log('✅ Music player initialized successfully');
+                                updateStatus('✅ Music player ready!');
+                            } else {
+                                console.warn('⚠️ Music player not yet initialized');
+                                updateStatus('⚠️ Music player still initializing...', true);
+                            }
+                        }, 5000);
+                        
+                    } catch (error) {
+                        console.error('❌ Failed to create music player:', error);
+                        updateStatus('❌ Music player creation failed', true);
+                    }
+                };
+                
+                script.onerror = () => {
+                    console.error('❌ Failed to load music player script');
+                    updateStatus('❌ Failed to load music player script', true);
+                };
+                
+                document.head.appendChild(script);
+                
+            } catch (error) {
+                console.error('❌ Music player test failed:', error);
+                updateStatus('❌ Music player test failed', true);
+            }
+        }
+        
+        // Auto-start tests when page loads
+        window.addEventListener('load', () => {
+            console.log('🚀 Page loaded, starting tests...');
+            updateStatus('Starting tests...');
+            
+            // Start with API test
+            setTimeout(() => {
+                testDirectAPI();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

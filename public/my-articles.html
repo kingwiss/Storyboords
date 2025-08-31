@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Articles - AI Article Audiobook</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div class="header-content">
+                <h1>AI Article Audiobook</h1>
+                <nav class="main-navigation">
+                    <a href="index.html" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        <span>Home</span>
+                    </a>
+                    <a href="my-articles.html" class="nav-link active">
+                        <i class="fas fa-book"></i>
+                        <span>My Articles</span>
+                    </a>
+                </nav>
+                <div class="header-controls">
+                    <button id="music-toggle" class="music-toggle" title="Toggle ambient music">
+                        <i class="fas fa-music"></i>
+                    </button>
+                </div>
+                <div id="auth-section">
+                    <div id="auth-buttons" class="auth-logged-out">
+                        <button id="login-btn" class="auth-btn">Login</button>
+                        <button id="signup-btn" class="auth-btn">Sign Up</button>
+                    </div>
+                    <div id="user-info" class="auth-logged-in" style="display: none;">
+                        <span id="welcome-text">Welcome, <span id="username"></span>!</span>
+                        <button id="profile-btn" class="auth-btn">Profile</button>
+                        <button id="logout-btn" class="auth-btn">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <main>
+            <div class="page-header">
+                <h2>My Articles</h2>
+                <p class="page-description">Manage and listen to your generated audiobooks</p>
+            </div>
+            
+            <!-- Articles Container -->
+            <div id="articles-container" class="articles-grid">
+                <!-- Articles will be loaded here -->
+            </div>
+            
+            <!-- Empty State -->
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <div class="empty-icon">📚</div>
+                <h3>No Articles Yet</h3>
+                <p>You haven't generated any audiobooks yet. <a href="index.html">Create your first one!</a></p>
+            </div>
+            
+            <!-- Loading State -->
+            <div id="loading-state" class="loading-state" style="display: none;">
+                <div class="spinner"></div>
+                <p>Loading your articles...</p>
+            </div>
+            
+
+        </main>
+    </div>
+
+    <!-- Floating active article button -->
+    <button id="active-article-btn" class="floating-active-article-btn" style="display: none;" title="Return to active article">
+        <i class="fas fa-headphones"></i>
+        <span class="article-status">Article Playing</span>
+    </button>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Login</h2>
+                <span class="close" id="login-close">&times;</span>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-email">Email:</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password:</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="primary-btn">Login</button>
+                    <button type="button" id="switch-to-signup" class="secondary-btn">Don't have an account? Sign up</button>
+                </div>
+            </form>
+            <div id="login-error" class="error-message" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signup-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Sign Up</h2>
+                <span class="close" id="signup-close">&times;</span>
+            </div>
+            <form id="signup-form">
+                <div class="form-group">
+                    <label for="signup-username">Username:</label>
+                    <input type="text" id="signup-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-email">Email:</label>
+                    <input type="email" id="signup-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Password:</label>
+                    <input type="password" id="signup-password" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="signup-confirm-password">Confirm Password:</label>
+                    <input type="password" id="signup-confirm-password" required minlength="6">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="primary-btn">Sign Up</button>
+                    <button type="button" id="switch-to-login" class="secondary-btn">Already have an account? Login</button>
+                </div>
+            </form>
+            <div id="signup-error" class="error-message" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script src="real-music-player.js"></script>
+    <script src="persistent-music.js"></script>
+    <script src="my-articles.js"></script>
+</body>
+</html>

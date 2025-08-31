@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Freesound Test</title>
+</head>
+<body>
+    <h1>Simple Freesound API Test</h1>
+    <button onclick="testAPI()">Test API</button>
+    <div id="result"></div>
+    
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                const apiKey = '4cmgOaCLIaCPZljPUkzZnJB6qKWjoxEC1Rtxv5eJ';
+                const url = `https://freesound.org/apiv2/search/text/?query=ambient%20music&filter=duration:[30%20TO%20300]%20license:%22Creative%20Commons%200%22&sort=rating_desc&page_size=3&fields=id,name,username,previews,duration,license&token=${apiKey}`;
+                
+                console.log('Making request to:', url);
+                
+                const response = await fetch(url);
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('API Response:', data);
+                
+                let html = `<h3>API Response (Status: ${response.status})</h3>`;
+                html += `<p>Found ${data.count} total results</p>`;
+                
+                if (data.results && data.results.length > 0) {
+                    html += '<h4>First few results:</h4>';
+                    data.results.forEach((sound, index) => {
+                        html += `<div style="border: 1px solid #ccc; margin: 10px; padding: 10px;">`;
+                        html += `<strong>Sound ${index + 1}:</strong> ${sound.name} by ${sound.username}<br>`;
+                        html += `<strong>ID:</strong> ${sound.id}<br>`;
+                        html += `<strong>Duration:</strong> ${sound.duration}s<br>`;
+                        html += `<strong>Has previews:</strong> ${!!sound.previews}<br>`;
+                        
+                        if (sound.previews) {
+                            html += `<strong>Preview formats:</strong> ${Object.keys(sound.previews).join(', ')}<br>`;
+                            
+                            // Try to create audio element
+                            const previewUrl = sound.previews['preview-hq-mp3'] || sound.previews['preview-lq-mp3'];
+                            if (previewUrl) {
+                                html += `<strong>Preview URL:</strong> <a href="${previewUrl}" target="_blank">${previewUrl}</a><br>`;
+                                html += `<audio controls><source src="${previewUrl}" type="audio/mpeg">Your browser does not support audio.</audio><br>`;
+                            }
+                        } else {
+                            html += '<strong>No previews available</strong><br>';
+                        }
+                        html += '</div>';
+                    });
+                } else {
+                    html += '<p>No results found</p>';
+                }
+                
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `<div style="color: red;"><h3>Error:</h3><p>${error.message}</p></div>`;
+            }
+        }
+        
+        // Auto-run test
+        window.addEventListener('load', () => {
+            setTimeout(testAPI, 1000);
+        });
+    </script>
+</body>
+</html>
