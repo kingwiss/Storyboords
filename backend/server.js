@@ -12,13 +12,15 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { db, dbHelpers } = require('./database');
 
 const app = express();
-const port = 3001;
+const port = process.env.PORT || 3001;
 
 // JWT Secret (in production, use environment variable)
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 const corsOptions = {
-    origin: 'http://localhost:3001',
+    origin: process.env.NODE_ENV === 'production' 
+        ? [process.env.FRONTEND_URL, process.env.RAILWAY_STATIC_URL]
+        : 'http://localhost:3001',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -30,7 +32,14 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
 app.use(express.json());
-app.use(express.static('../public')); // Serve static files from public directory
+// Serve static files from public directory
+const path = require('path');
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Serve index.html for the root route
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../index.html'));
+});
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your-session-secret',
     resave: false,
@@ -57,7 +66,10 @@ const emailTransporter = nodemailer.createTransport({
 // Function to send password reset email using Gmail SMTP
 const sendPasswordResetEmail = async (email, resetToken) => {
     try {
-        const resetUrl = `http://localhost:3001/reset-password?token=${resetToken}`;
+        const baseUrl = process.env.NODE_ENV === 'production' 
+            ? (process.env.FRONTEND_URL || process.env.RAILWAY_STATIC_URL)
+            : 'http://localhost:3001';
+        const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
         
         const mailOptions = {
             from: process.env.EMAIL_FROM || 'noreply@storyboards.local',

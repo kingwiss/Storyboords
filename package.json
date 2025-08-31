@@ -2,10 +2,15 @@
   "name": "article-audiobook-app",
   "version": "1.0.0",
   "description": "An application to convert articles into audiobooks with AI-generated summaries and images.",
-  "main": "index.js",
+  "main": "backend/server.js",
   "scripts": {
-    "start": "npm run start --prefix backend",
+    "start": "cd backend && npm install && npm start",
+    "build": "npm install && cd backend && npm install",
     "dev": "npx http-server public -p 3000 -P http://localhost:3001 --cors"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
   "keywords": [
     "audiobook",
